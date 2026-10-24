@@ -1,0 +1,413 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Surti Swaad — deep green, cream and gold.
+
+   The colours live in colors.css, where every token already had a name, so
+   the palette changed there and the whole till followed. What is here is
+   what a palette on its own cannot buy: depth, rhythm, and the handful of
+   gold details that separate a screen which is green from a screen that
+   looks expensive.
+
+   Three rules it keeps to:
+
+   · Shadows are green, never grey. A grey shadow on a cream page reads as a
+     dirty mark; the same shadow tinted with the brand colour reads as depth.
+   · Gold is a hairline, a dot, an edge — almost never a fill. Filled gold is
+     the cheapest-looking thing in this palette, and nothing can be written
+     on top of it.
+   · Every surface is one of three: cream (the page), white (a card), green
+     (a thing that acts). There is no fourth.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Shadows carry the brand's own green. Three steps and no more: a screen
+     with five levels of elevation has none. */
+  --lift-1: 0 1px 2px rgba(6, 78, 59, 0.05), 0 1px 1px rgba(6, 78, 59, 0.03);
+  --lift-2: 0 2px 6px rgba(6, 78, 59, 0.07), 0 1px 2px rgba(6, 78, 59, 0.04);
+  --lift-3: 0 10px 30px rgba(6, 78, 59, 0.1), 0 3px 8px rgba(6, 78, 59, 0.05);
+
+  /* One radius scale. Mixed radii are the loudest tell of a screen nobody
+     actually drew. */
+  --r-sm: 9px;
+  --r-md: 13px;
+  --r-lg: 17px;
+
+  /* The gold hairline that edges a dark surface. Barely there, and the one
+     detail doing the most work on the whole screen. */
+  --gold-hair: rgba(212, 175, 55, 0.38);
+
+  /**
+   * The three GreenFalk gradients, exactly as the brand sheet gives them.
+   *
+   * They are written out here once and referred to everywhere, rather than
+   * being retyped at each use. A gradient copied by hand into six files is
+   * six gradients within a month.
+   *
+   * The gold one is the reason the brand reads as metal rather than as
+   * yellow: it is four stops, not two, and the near-white at 65% is the
+   * glint. Take that stop out and the same colours look like mustard.
+   */
+  --gf-gradient-green: linear-gradient(120deg, #022c22 0%, #064e3b 48%, #10b981 100%);
+  --gf-gradient-gold: linear-gradient(
+    120deg,
+    #8c6112 0%,
+    #d4af37 45%,
+    #fff0a6 65%,
+    #b8860b 100%
+  );
+  --gf-gradient-hero: linear-gradient(135deg, #022c22 0%, #064e3b 55%, #6b4f16 100%);
+
+  /* How narrow a dish card may get before it takes a row to itself.
+
+     Lowered when the card went to two columns: the dish on the left and the
+     price and stepper on the right need less width together than they did
+     stacked, and a narrower card means more of them on a row and less of
+     the page given to nothing.
+
+     A token
+     rather than a literal because it is not one figure: the card holds a
+     price and a stepper side by side, and the stepper is 36px under a mouse
+     and 44px under a thumb. 240px fitted the first and was short for the
+     second, so on a tablet — which is most tills — the plus button was
+     pushed out past the edge of its own card. */
+  --pos-dish-min: 232px;
+}
+
+@media (pointer: coarse) {
+  :root {
+    --pos-dish-min: 276px;
+  }
+}
+
+/**
+ * A menu that carries photographs.
+ *
+ * The thumbnail is 44px and its gap is 10, so the card needs 54px more before
+ * the dish's name starts paying for the picture. At the figure above, a card
+ * at its narrowest had about sixty pixels left for the name — which is the
+ * one thing a card exists to say.
+ *
+ * The class goes on the grid and nowhere else, so this applies only while the
+ * menu actually has a picture in it. A menu typed in without any keeps the
+ * cards, and the column count, it has always had.
+ */
+.pos-grid-photos {
+  --pos-dish-min: 286px;
+}
+
+@media (pointer: coarse) {
+  .pos-grid-photos {
+    --pos-dish-min: 330px;
+  }
+}
+
+/* ── The rail ─────────────────────────────────────────────────────────── */
+
+/**
+ * Not flat green: lit from the top, the way a real surface is.
+ *
+ * The first attempt tiled a geometric motif across it at six per cent. In a
+ * screenshot that is a texture; on a till at arm's length it is dirt. What
+ * is left is a long vertical gradient and a single gold hairline down the
+ * inside edge — and the hairline is what reads as expensive, because a
+ * cheap screen never has one.
+ */
+.pos-rail {
+  /* Deep Emerald into Forest Black-Green, which is the brand's own green
+     gradient read top to bottom instead of across. */
+  background-image: linear-gradient(180deg, #064e3b 0%, #04392b 55%, #022c22 100%);
+  box-shadow: inset -1px 0 0 var(--gold-hair);
+}
+
+@media (pointer: coarse) and (max-width: 899px) {
+  /* Lying across the bottom of a phone the light comes from above instead,
+     and the hairline moves to the top edge. */
+  .pos-rail {
+    background-image: linear-gradient(
+      180deg,
+      var(--theme-primary) 0%,
+      var(--theme-primary-dark) 100%
+    );
+    box-shadow: inset 0 1px 0 var(--gold-hair);
+  }
+}
+
+/**
+ * Where you are, on the rail.
+ *
+ * Brushed gold rather than a flat fill, with the darkest green in the
+ * palette for the icon. White on gold is the one pairing here that cannot
+ * be read at any size.
+ */
+.pos-rail-item-active {
+  /* The brand's metallic gold itself — the four-stop one, with the glint
+     near the top left where the light would fall on a real pressed shape. */
+  background-image: var(--gf-gradient-gold);
+  color: var(--theme-primary-darker);
+  box-shadow:
+    0 2px 10px rgba(2, 44, 34, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.pos-rail-item {
+  color: rgba(255, 255, 255, 0.66);
+}
+
+.pos-rail-item:hover {
+  background-color: rgba(255, 255, 255, 0.09);
+  color: #fff;
+}
+
+/* ── Surfaces ─────────────────────────────────────────────────────────── */
+
+/**
+ * A card: white on cream, held down by a hairline rather than a shadow.
+ *
+ * The border is the brand green at nine per cent, not a grey. Grey borders
+ * on a warm page are what made the first pass look like a tax form.
+ */
+.pos-card {
+  background-color: var(--color-white);
+  border: 1px solid rgba(6, 78, 59, 0.09);
+  border-radius: var(--r-md);
+  box-shadow: var(--lift-1);
+  transition: box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.pos-card:hover {
+  border-color: rgba(6, 78, 59, 0.16);
+  box-shadow: var(--lift-2);
+}
+
+/**
+ * The card being added to.
+ *
+ * A gold edge and a whisper of gold in the surface — enough to find across
+ * a counter, not enough to shout. The ring is inset so the card does not
+ * grow by two pixels and nudge its neighbours when it is chosen.
+ */
+.pos-card-selected,
+.pos-card.pos-card-selected:hover {
+  border-color: var(--theme-secondary);
+  background-image: linear-gradient(
+    180deg,
+    rgba(212, 175, 55, 0.08),
+    rgba(212, 175, 55, 0) 62%
+  );
+  box-shadow: inset 0 0 0 1px var(--theme-secondary), var(--lift-2);
+}
+
+/** A dark panel — a claimed table, the header over an order. */
+.pos-panel-dark {
+  background-image: linear-gradient(165deg, var(--theme-primary-light), var(--theme-primary-dark));
+  color: #fff;
+  border-radius: var(--r-md);
+  box-shadow: var(--lift-2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ── Chips ────────────────────────────────────────────────────────────── */
+
+.pos-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1.7;
+  white-space: nowrap;
+}
+
+.pos-chip-quiet {
+  background-color: var(--bg-secondary);
+  color: var(--text-dark-muted);
+}
+
+/* Gold as an outline and a tint, never as a fill under words. */
+.pos-chip-gold {
+  background-color: rgba(212, 175, 55, 0.13);
+  border: 1px solid rgba(212, 175, 55, 0.34);
+  color: var(--theme-secondary-dark);
+}
+
+.pos-chip-green {
+  background-color: rgba(6, 78, 59, 0.07);
+  border: 1px solid rgba(6, 78, 59, 0.14);
+  color: var(--theme-primary);
+}
+
+/* ── Things that act ──────────────────────────────────────────────────── */
+
+/**
+ * The green button, with the light on it.
+ *
+ * A flat fill and a lit fill are a line apart in code and a world apart on
+ * screen. The inner highlight along the top edge is what makes it read as a
+ * raised key rather than a coloured rectangle.
+ */
+.pos-btn-primary {
+  background-image: linear-gradient(170deg, var(--theme-primary-light), var(--theme-primary));
+  color: #fff;
+  border-radius: var(--r-sm);
+  box-shadow: var(--lift-2), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: filter 0.15s ease, transform 0.08s ease, box-shadow 0.15s ease;
+}
+
+.pos-btn-primary:hover {
+  filter: brightness(1.1);
+  box-shadow: var(--lift-3), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.pos-btn-primary:active {
+  transform: translateY(1px);
+  box-shadow: var(--lift-1);
+}
+
+/**
+ * A quiet key: the numpad, Discount, Hold.
+ *
+ * White with a green hairline and a little lift, so a grid of them reads as
+ * a set of keys rather than a table of empty cells.
+ */
+.pos-key {
+  background-color: var(--color-white);
+  border: 1px solid rgba(6, 78, 59, 0.1);
+  border-radius: var(--r-sm);
+  color: var(--color-black);
+  box-shadow: var(--lift-1);
+  transition: background-color 0.14s ease, border-color 0.14s ease, transform 0.08s ease,
+    box-shadow 0.14s ease;
+}
+
+.pos-key:hover:not(:disabled) {
+  border-color: rgba(6, 78, 59, 0.26);
+  box-shadow: var(--lift-2);
+}
+
+.pos-key:active:not(:disabled) {
+  transform: translateY(1px);
+  background-color: var(--bg-secondary);
+  box-shadow: none;
+}
+
+/**
+ * The last thing pressed on a sale.
+ *
+ * Deep green, lit from above, edged in gold. Nothing else on the screen is
+ * shaped like it, which is the point: it is found by its colour rather than
+ * by being read.
+ */
+.pos-cta {
+  /* The brand's hero gradient, turned to run down the button: Forest
+     Black-Green into Deep Emerald, finishing on the dark gold that the
+     sheet calls for. That last stop is why it reads as the premium thing
+     on the screen rather than as another green button. */
+  background-image: linear-gradient(160deg, #064e3b 0%, #04392b 58%, #3f3414 100%);
+  color: #fff;
+  border-radius: var(--r-md);
+  box-shadow:
+    inset 0 0 0 1px var(--gold-hair),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 8px 22px rgba(6, 78, 59, 0.28);
+  transition: filter 0.15s ease, transform 0.08s ease;
+}
+
+.pos-cta:hover {
+  filter: brightness(1.09);
+}
+
+.pos-cta:active {
+  transform: translateY(1px);
+}
+
+/* ── Details ──────────────────────────────────────────────────────────── */
+
+/** A gold rule, for under a heading or above a total. */
+.pos-rule-gold {
+  height: 1px;
+  border: 0;
+  background-image: linear-gradient(
+    90deg,
+    var(--theme-secondary) 0%,
+    rgba(212, 175, 55, 0.25) 45%,
+    rgba(212, 175, 55, 0) 100%
+  );
+}
+
+/** The figure a guest is about to be asked for. */
+.pos-money {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
+
+/* Keyboard focus, in gold, everywhere. A till is driven by shortcuts, and a
+   focus ring nobody can see is a cashier guessing where they are. */
+:where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--theme-secondary);
+  outline-offset: 2px;
+}
+
+/**
+ * The quantity stepper: one track, not three keys.
+ *
+ * It was three separate shapes — an outlined minus, the count, and a solid
+ * green square for plus — on the argument that the key pressed all evening
+ * should be the loudest thing on the card. That reasoning was sound and the
+ * result was still wrong: three shapes take more width than one, and on a
+ * menu of forty cards the stepper was competing with the price for the eye
+ * when it is the price somebody is actually reading.
+ *
+ * One recessed track now, with the plus carrying the brand green and the
+ * minus staying quiet. It is narrower, it reads as a single control rather
+ * than as two buttons that happen to be near each other, and the card gets
+ * the width back.
+ */
+.pos-stepper {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 10px;
+  background-color: var(--bg-secondary);
+  border: 1px solid rgba(6, 78, 59, 0.1);
+  box-shadow: inset 0 1px 2px rgba(6, 78, 59, 0.06);
+  overflow: hidden;
+}
+
+.pos-stepper > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  transition: background-color 0.14s ease, color 0.14s ease;
+}
+
+.pos-stepper > button:hover:not(:disabled) {
+  background-color: rgba(6, 78, 59, 0.08);
+}
+
+.pos-stepper > button:active:not(:disabled) {
+  background-color: rgba(6, 78, 59, 0.14);
+}
+
+.pos-stepper > button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Take-away is quiet: pressed by mistake it costs a guest their dish. */
+.pos-stepper-minus {
+  color: var(--text-muted);
+}
+
+/* Add carries the brand, because add is what this control is for. */
+.pos-stepper-plus {
+  color: var(--theme-primary);
+}
+
+.pos-stepper-count {
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  font-weight: 800;
+}

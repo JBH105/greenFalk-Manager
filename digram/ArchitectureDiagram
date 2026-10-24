@@ -1,0 +1,140 @@
+┌─────────────────────────────────────────────┐
+│                  USER                       │
+│        (Cashier – Browser / Device)          │
+└─────────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────────┐
+│               UI LAYER (React)               │
+│                                             │
+│  ┌───────────────┐   ┌──────────────────┐  │
+│  │ Login Page    │   │ POS / Discount UI │  │
+│  └───────────────┘   └──────────────────┘  │
+│                ▲                │            │
+│                │                ▼            │
+│        ┌────────────────────────────────┐   │
+│        │     UI Guards & Loaders         │   │
+│        │  (OfflineLoader, Skeleton UI)  │   │
+│        └────────────────────────────────┘   │
+└─────────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────────┐
+│            STATE MANAGEMENT (Zustand)       │
+│                                             │
+│  ┌──────────────────────────────────────┐  │
+│  │ useAuthStore                         │  │
+│  │ - isAuthenticated                    │  │
+│  │ - login / logout                     │  │
+│  │ - uses Cookies                       │  │
+│  └──────────────────────────────────────┘  │
+│                                            │
+│  ┌──────────────────────────────────────┐  │
+│  │ usePosStore                          │  │
+│  │ - items                              │  │
+│  │ - selectedCategory                   │  │
+│  │ - hydrated (IMPORTANT)               │  │
+│  │ - addItem / loadItems / sync         │  │
+│  └──────────────────────────────────────┘  │
+│                                            │
+│  ┌──────────────────────────────────────┐  │
+│  │ useNetworkStore                      │  │
+│  │ - online / offline                   │  │
+│  └──────────────────────────────────────┘  │
+└─────────────────────────────────────────────┘
+                    │
+         ┌──────────┴───────────┐
+         │                      │
+         ▼                      ▼
+┌───────────────────┐   ┌────────────────────┐
+│   IndexedDB       │   │   Browser Cookies   │
+│ (Local Database)  │   │ (Auth Persistence) │
+│                   │   │                    │
+│ - POS Items       │   │ - auth_token       │
+│ - isSynced flag   │   │                    │
+│ - updatedAt       │   │                    │
+└───────────────────┘   └────────────────────┘
+         │
+         │ (Only when ONLINE)
+         ▼
+┌─────────────────────────────────────────────┐
+│              BACKEND SERVER                 │
+│                                             │
+│  ┌──────────────────────────────────────┐  │
+│  │ Auth APIs                             │  │
+│  │ POS APIs                              │  │
+│  │ Sync APIs (/pos/sync)                 │  │
+│  └──────────────────────────────────────┘  │
+│                                             │
+│  ┌──────────────────────────────────────┐  │
+│  │ Database (MySQL / MongoDB)            │  │
+│  └──────────────────────────────────────┘  │
+└─────────────────────────────────────────────┘
+
+
+
+
+
+DATA FLOW SCENARIOS:
+
+ONLINE:
+API → IndexedDB → Zustand → UI
+
+OFFLINE:
+IndexedDB → Zustand → UI
+
+OFFLINE + HARD REFRESH:
+Refresh → Loader → IndexedDB → Zustand → UI
+
+
+
+example how the online and offline data flows work ::::
+
+online data flow:
+Cashier clicks "Save Customer"
+↓
+Customer saved in IndexedDB (isSynced = false)
+↓
+UI updates instantly
+↓
+navigator.onLine === true
+↓
+Send customer to backend
+↓
+Backend success
+↓
+Update IndexedDB → isSynced = true
+
+
+
+
+offline data flow:
+Cashier clicks "Save Customer"
+↓
+Customer saved in IndexedDB (isSynced = false)
+↓
+UI updates instantly
+↓
+No internet → stop
+↓
+Later internet comes back
+↓
+Auto sync
+↓
+isSynced = true
+
+
+
+ProductComp
+   ↓
+addToCart()  → cartData (NO TAX)
+   ↓
+Dashboard
+   ↓
+subtotal / tax / discount / total (DERIVED)
+   ↓
+createOrder()
+   ↓
+Order saved (WITH TAX)
+   ↓
+PrintOrder uses order totals

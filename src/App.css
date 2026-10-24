@@ -1,0 +1,415 @@
+@import "tailwindcss";
+
+/**
+ * The two faces this till is set in.
+ *
+ * Plus Jakarta Sans does the work: it has a tall x-height, which keeps a
+ * dish name legible at 13px across a counter, and real weight range, which
+ * is what lets a card say "this is the name, this is the price" without
+ * drawing a box round either. Open Sans had neither — every line of the
+ * screen came out the same weight and the same grey, and a screen with no
+ * hierarchy reads as cheap however good its colours are.
+ *
+ * Fraunces is kept for the few places the restaurant's own name or a total
+ * is being shown off, and nowhere else. A serif used twice on a screen is
+ * expensive; used everywhere it is a wedding invitation.
+ *
+ * Both are bundled rather than fetched. A till in a basement with no wifi
+ * still has to draw its own menu.
+ */
+@import "@fontsource-variable/plus-jakarta-sans";
+@import "@fontsource-variable/fraunces";
+@import "@fontsource-variable/noto-sans-arabic";
+
+/* Colors are centralised in colors.css; everything that is more than a
+   colour — depth, radii, the gold details — is in theme.css; and the light
+   on the few surfaces meant to look polished is in gloss.css, which comes
+   last because it refines what theme.css lays down. */
+@import "./theme.css";
+@import "./gloss.css";
+
+@theme inline {
+  --color-background: var(--bg-main);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-tertiary: var(--bg-tertiary);
+  --color-surface: var(--color-white);
+
+  --color-text-primary: var(--color-black);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-inverted: var(--color-white);
+
+  --color-border-default: var(--border-default);
+  --color-border-muted: var(--border-muted);
+
+  --color-primary: var(--theme-primary);
+  --color-secondary: var(--theme-secondary);
+  --color-accent: var(--theme-accent);
+
+  --color-success: var(--success-default);
+  --color-warning: var(--warning-default);
+  --color-error: var(--error-default);
+  --color-info: var(--info-default);
+}
+
+@layer utilities {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+body {
+  font-family: "Plus Jakarta Sans Variable", "Segoe UI", system-ui, sans-serif;
+  /* Letters set a touch tight. At the sizes a till uses, default tracking
+     reads as loose and loose reads as cheap. */
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  color: var(--color-black);
+}
+
+/**
+ * Money, counts, clocks — anything whose digits should not shuffle.
+ *
+ * A total that re-flows by a pixel every time a quantity changes is the
+ * single cheapest-looking thing a till can do, and it happens on every tap.
+ */
+.tabular-nums,
+[class*="tabular-nums"] {
+  font-variant-numeric: tabular-nums;
+}
+
+/** The restaurant's own name, and the one number being shown off. */
+.font-display {
+  font-family: "Fraunces Variable", Georgia, serif;
+  font-optical-sizing: auto;
+  letter-spacing: -0.02em;
+}
+
+/**
+ * A small upright label: TOKEN NO., SUBTOTAL, the word over a figure.
+ *
+ * Wide tracking and a lot of weight at a small size. This is the detail
+ * that most reads as considered rather than default — and it costs nothing.
+ */
+.label-caps {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Installed on a phone, the app reaches the edges of the screen — which on a
+   notched one means the top bar sits under the notch and the bottom nav under
+   the home indicator. The shell gives that space back.
+
+   Only while installed: in a browser tab the insets are zero and this changes
+   nothing, and the height stays a plain 100vh on every desktop till. */
+/* A finger is not a mouse pointer.
+
+   Width is the wrong thing to ask: a phone held sideways is 844px across and
+   was getting the same 28px-tall buttons as a desktop till. `pointer: coarse`
+   asks the right question — is this being touched? — so every phone and
+   tablet gets controls a thumb can land on, and a mouse-driven till keeps the
+   compact layout that fits more on screen. */
+@media (pointer: coarse) {
+  .tap-target {
+    min-height: 40px;
+    /* Height alone was not enough: an icon button 32px across is still a
+       32px-wide thing to hit, however tall it is. */
+    min-width: 40px;
+  }
+
+  .tap-stepper {
+    height: 2.5rem;
+  }
+
+  .tap-stepper > button {
+    width: 2.75rem;
+  }
+
+  .tap-stepper > span {
+    width: 2.25rem;
+    font-size: 14px;
+  }
+}
+
+/**
+ * The bottom bar, and the band the device keeps for itself.
+ *
+ * On a phone or an iPad with a home indicator, the bottom strip of the
+ * screen belongs to the system. The bar is position:fixed, so it is laid
+ * out against the screen and not against .pos-shell — shrinking the shell,
+ * which is what used to be done here, never moved the bar by a pixel. It
+ * sat in the indicator's band with its icons sliced in half.
+ *
+ * So the bar pays for the band itself: it grows by the inset and pads its
+ * contents up out of it, and everything that has to clear the bar measures
+ * against the same figure. On a desktop the inset is zero and nothing here
+ * changes anything.
+ *
+ * It is not behind a standalone-only media query any more either: the bar
+ * was cut in an ordinary browser tab too, which is how most tills run.
+ */
+:root {
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* Room for the icons themselves. */
+  --pos-bar-height: 3.5rem;
+
+  /**
+   * Room kept below them, whatever the device says.
+   *
+   * A phone with gesture navigation draws a bar across the bottom of the
+   * screen whether or not the browser admits to it — Chrome on Android
+   * commonly reports nothing at all. Trusting the reported figure alone left
+   * the icons sitting on that line on exactly the phones that do not report
+   * it.
+   *
+   * 48px is not a guess: it is the height Android gives its gesture bar, the
+   * tallest thing any phone puts down there. Reserving a whole one means the
+   * icons stay clear of it even on a phone that admits to nothing — which is
+   * the phone this was still being pressed on.
+   */
+  --pos-bar-floor: 3rem;
+
+  --pos-bar-space: calc(
+    var(--pos-bar-height) + max(var(--safe-bottom), var(--pos-bar-floor))
+  );
+}
+
+/**
+ * The bar: its background covers the whole band, its icons sit above the
+ * home indicator, and the row is roughly centred between the two.
+ *
+ * There is no padding: the row simply centres in the bar, and the bar is
+ * tall enough that centring leaves the clearance. Padding the bottom — the
+ * first two attempts here — always pushes the icons up against the top edge
+ * and leaves the space below them looking like a mistake. Centring in a bar
+ * that already includes the clearance gives the same safety and looks square.
+ */
+.pos-bottom-bar {
+  height: var(--pos-bar-space);
+}
+
+/* Room left for the bar by whatever scrolls behind it. */
+.pos-bar-gap {
+  margin-bottom: var(--pos-bar-space);
+}
+
+/* Anything floating just clear of the bar. */
+.pos-above-bar {
+  bottom: calc(var(--pos-bar-space) + 0.375rem);
+}
+
+/* A sheet that rises from the bar itself, flush against its top edge. */
+.pos-sheet-on-bar {
+  bottom: var(--pos-bar-space);
+}
+
+@media (display-mode: standalone) {
+  .pos-shell {
+    height: calc(100vh - env(safe-area-inset-top, 0px));
+    margin-top: env(safe-area-inset-top, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+}
+@keyframes toast-progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+/* Modal scale-in: smooth entry from scale 0 to 1 */
+@keyframes scale-in {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out forwards;
+}
+
+/* Login page: float-up with smooth easing; infinite loop (100vh → -100vh) so no visible respawn/hide */
+@keyframes float-up {
+  from {
+    transform: translateY(100vh) rotate(var(--start-rotate, 0deg));
+    opacity: 0.75;
+  }
+  to {
+    transform: translateY(-100vh) rotate(var(--end-rotate, 15deg));
+    opacity: 0.4;
+  }
+}
+
+/* Hide spinners in Chrome, Safari, Edge, and Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Hide spinners in Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* --- POS toast container -------------------------------------------------
+   Bottom-left, so notifications never sit on top of the cart panel (right)
+   or the floating cart button (bottom-centre). On compact screens the bottom
+   nav bar occupies ~54px, so lift the toasts clear of it.
+
+   Only `bottom` and `left` may be changed. react-hot-toast renders a fixed,
+   full-viewport container (top/left/right/bottom all 16px) and positions each
+   toast absolutely inside it with `left: 0; right: 0`. Collapsing that
+   container — e.g. `inset: auto auto 20px 20px` — squeezes the toast to zero
+   width. `!important` is required because the library sets these inline.
+-------------------------------------------------------------------------- */
+.pos-toast-wrap {
+  bottom: 20px !important;
+  left: 20px !important;
+}
+
+@media (max-width: 899px) {
+  .pos-toast-wrap {
+    bottom: 74px !important;
+    left: 12px !important;
+  }
+}
+
+/* ── The till is working on it ──────────────────────────────────────────────
+   One ring, turning. It is drawn in currentColor so it belongs to whatever
+   button it sits in, whichever of the seven themes the outlet has picked.
+
+   Where somebody has asked their machine to stop animating, it stops turning
+   but stays a full ring: it is there to say that something is happening, and
+   a spinner that disappears says the opposite. */
+.pos-spinner {
+  animation: pos-spin 0.7s linear infinite;
+}
+
+@keyframes pos-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pos-spinner {
+    animation: none;
+    border-top-color: currentColor;
+    opacity: 0.55;
+  }
+}
+
+
+/**
+ * THE PAGE'S OWN COLOUR
+ *
+ * `body` carried a font and a text colour but never a background, so the
+ * page itself was whatever the browser paints — white. Every sage surface
+ * in the till is painted by some element inside the tree, and anywhere one
+ * of those elements did not reach, that white showed through: a strip down
+ * the side of a fixed rail, a sliver under a short page, the overscroll
+ * band at the top of a trackpad fling.
+ *
+ * The root is the one surface nothing can fail to cover, so it gets the
+ * page colour and the white has nowhere left to appear from. `html` is
+ * painted too, not just `body`: an overscroll rubber-band draws the canvas
+ * colour, which is taken from `html` and not from `body`.
+ */
+html,
+body {
+  background-color: var(--bg-main);
+}
+
+/**
+ * ARABIC
+ *
+ * Plus Jakarta Sans carries no Arabic glyphs at all, so Arabic set in it falls
+ * back to whatever the machine happens to have — which on a Windows till is a
+ * different face, a different weight and a different height from the line
+ * above it. Noto Sans Arabic is bundled with the app, like the Latin faces,
+ * so a till with no fonts installed and no internet still draws it correctly.
+ *
+ * The Latin face is listed first so digits and any Latin inside an Arabic
+ * line — a price, a code, "KOT 2" — keep the shapes they have everywhere
+ * else, and only the Arabic falls through to the Arabic face.
+ *
+ * Numerals stay Western on purpose. A bill reads AED 90.00, not ٩٠, because
+ * that is what the UAE prints and what the tax authority reads.
+ */
+.font-arabic {
+  font-family:
+    "Plus Jakarta Sans Variable",
+    "Noto Sans Arabic Variable",
+    "Segoe UI",
+    system-ui,
+    sans-serif;
+  font-variant-numeric: lining-nums;
+}
+
+/**
+ * Arabic text, in boxes that are still laid out left to right.
+ *
+ * The screen is not mirrored — the toggle stays on the right of its label and
+ * the cards stay in the order they were built in, because half a mirror is
+ * worse than none. But the *words* are Arabic, and a sentence of Arabic
+ * dropped into a left-to-right box has its full stop pushed to the far left:
+ * ".الإعداد يخص هذا الجهاز" instead of "الإعداد يخص هذا الجهاز." Every hint
+ * on the printer page read like that.
+ *
+ * `plaintext` is the one thing in CSS made for exactly this. Each piece of
+ * text takes its direction from its own first strong letter: Arabic reads and
+ * aligns right, English stays as it was, and a price — digits are neither —
+ * stays left to right. The boxes do not move, because direction here is a
+ * property of the words, not of the layout.
+ *
+ * It does not inherit, so it is listed per element rather than set once.
+ */
+html[lang="ar"] :is(
+  p, h1, h2, h3, h4, h5, h6, span, label, button, option, li,
+  td, th, dt, dd, figcaption, legend, summary, input, textarea
+) {
+  unicode-bidi: plaintext;
+}
+
+/**
+ * And the Arabic face, for the whole screen rather than one dish's name.
+ *
+ * Without this the interface fell back to whatever Arabic the machine
+ * happened to have — Segoe UI on Windows, something else on the tablet in the
+ * kitchen — while the dish names beside them were set in the Noto Arabic this
+ * app ships. Two Arabics on one screen is visible, and the letters that
+ * differ most are the common ones.
+ *
+ * The Latin face is still named first, so the digits in AED 90.00 keep the
+ * shapes they have everywhere else in the app.
+ */
+html[lang="ar"] body,
+html[lang="ar"] :is(input, textarea, select, button, option) {
+  font-family:
+    "Plus Jakarta Sans Variable",
+    "Noto Sans Arabic Variable",
+    "Segoe UI",
+    system-ui,
+    sans-serif;
+  /* Arabic does not take the tightening Latin wants; it closes up the joins. */
+  letter-spacing: normal;
+}

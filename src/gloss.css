@@ -1,0 +1,773 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   GreenFalk — the gloss.
+
+   The mark is a polished thing: the gold has a glint running along it, the
+   emerald has a sheen, and both are lit from the upper left. This is that
+   same light, put onto the handful of surfaces that deserve it.
+
+   Glossy is easy to get wrong, and wrong looks cheaper than flat. The rules:
+
+   · Light comes from ONE place — the upper left — on every surface, always.
+     Two light sources is the single thing that makes a screen look fake.
+   · A specular is a soft band across the TOP of a shape, fading out by the
+     middle. It is never a white blob, never a hard edge, never below centre.
+   · Three strokes make metal: a 1px light line on the top edge, the specular
+     under it, and a dark line on the bottom edge. The bottom line is the one
+     people forget, and it is what gives the shape thickness.
+   · Only raised things get it. A page, a card at rest and a list row are
+     flat, because if everything shines, nothing does.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * The specular band.
+ *
+ * Laid over whatever the element's own background is, so a gold surface
+ * stays gold and an emerald one stays emerald — it is light, not paint.
+ * Inherits the radius so it never squares off a rounded corner, and takes
+ * no pointer events so it cannot swallow a tap.
+ */
+.gloss {
+  isolation: isolate;
+}
+
+.gloss::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    177deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0.09) 34%,
+    rgba(255, 255, 255, 0.015) 50%,
+    rgba(255, 255, 255, 0) 56%
+  );
+}
+
+/** Stronger, for the two or three surfaces meant to look like polished metal. */
+.gloss-strong::after {
+  background-image: linear-gradient(
+    177deg,
+    rgba(255, 255, 255, 0.34) 0%,
+    rgba(255, 255, 255, 0.16) 30%,
+    rgba(255, 255, 255, 0.03) 48%,
+    rgba(255, 255, 255, 0) 55%
+  );
+}
+
+/**
+ * The light that travels when a finger or a pointer arrives.
+ *
+ * A narrow band, skewed, crossing in just over half a second and never
+ * coming back. On a till this is the difference between a button that
+ * responds and a button that merely changes colour — and because it is a
+ * transform it costs the compositor nothing.
+ *
+ * Only on hover, so it never plays on a screen nobody is touching.
+ */
+.sheen {
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.sheen::before {
+  content: "";
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: -70%;
+  width: 45%;
+  pointer-events: none;
+  transform: skewX(-18deg);
+  background-image: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.26) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transition: left 0.62s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.sheen:hover::before,
+.sheen:focus-visible::before {
+  left: 130%;
+}
+
+/* A cook with flour on their hands is not hovering anything, and a travelling
+   highlight on a wall screen is just movement in the corner of an eye. */
+@media (pointer: coarse) {
+  .sheen::before {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheen::before {
+    transition: none;
+    display: none;
+  }
+}
+
+/**
+ * A real gold edge, rather than a gold-coloured one.
+ *
+ * Two backgrounds in one box: the surface painted inside the padding box,
+ * the brand's metallic gradient painted in the border box. The border is
+ * declared transparent so the gradient shows through it. The result is an
+ * edge that is dark gold at one corner and pale at another, which is what
+ * an actual gilded edge does and what a flat gold border never does.
+ */
+.foil-edge {
+  border: 1px solid transparent;
+  background-image: linear-gradient(var(--color-white), var(--color-white)),
+    var(--gf-gradient-gold);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+/* The same edge around a dark surface. */
+.foil-edge-dark {
+  border: 1px solid transparent;
+  background-image: linear-gradient(#064e3b, #022c22), var(--gf-gradient-gold);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+/* ── Polished emerald ─────────────────────────────────────────────────── */
+
+/**
+ * Green, finished the way the gold is.
+ *
+ * The gold pill looked polished and the green buttons beside it looked
+ * painted, and the reason is not that one had gloss and the other did not —
+ * both had the same specular. It is that gold swings from a dark bronze
+ * through to a near-white glint, better than half the lightness range there
+ * is, so a white highlight laid on it is plainly visible. A deep emerald
+ * occupies a narrow, dark band near the bottom of that range, and the same
+ * white at the same strength simply disappears into it.
+ *
+ * So green is given its own, much harder, finish: a wider gradient, a top
+ * edge twice as bright, and a specular at nearly twice the strength. The
+ * numbers are different from the gold's on purpose. Matching them would
+ * have been consistent and would have looked wrong, which is the whole
+ * trap — the eye judges the result, never the rule.
+ *
+ * It stays dark enough for white type throughout. The lit corner is at the
+ * top left where no label sits; by the middle of the button, where the
+ * words are, it is already back to the brand's Deep Emerald.
+ */
+.gf-metal-green {
+  isolation: isolate;
+  background-image: linear-gradient(
+    152deg,
+    #12916b 0%,
+    #0b7355 24%,
+    #075c45 48%,
+    #064e3b 70%,
+    #043a2c 100%
+  );
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -2px 6px rgba(2, 44, 34, 0.6),
+    0 3px 12px rgba(2, 44, 34, 0.3);
+}
+
+.gf-metal-green::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    170deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0.17) 26%,
+    rgba(255, 255, 255, 0.04) 44%,
+    rgba(255, 255, 255, 0) 54%
+  );
+}
+
+.gf-metal-green:active {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 3px 9px rgba(2, 44, 34, 0.62);
+}
+
+/**
+ * Polished gold.
+ *
+ * The brand's four-stop metal, plus the three strokes that give it
+ * thickness. Type on it is always the darkest green in the palette: white
+ * on gold is the one pairing here that cannot be read at any size, and the
+ * glint at 65% makes the middle of the shape brighter still.
+ *
+ * Use it for the one or two things on a screen that are genuinely special —
+ * the table a guest is sitting at, the pill saying where you are. A screen
+ * with four gold things has no gold thing.
+ */
+.gf-metal-gold {
+  isolation: isolate;
+  background-image: var(--gf-gradient-gold);
+  color: var(--theme-primary-darker);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -2px 5px rgba(90, 62, 8, 0.45),
+    0 3px 12px rgba(212, 175, 55, 0.3);
+}
+
+.gf-metal-gold::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    170deg,
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0.16) 30%,
+    rgba(255, 255, 255, 0.03) 48%,
+    rgba(255, 255, 255, 0) 56%
+  );
+}
+
+.gf-metal-gold:hover:not(:disabled) {
+  filter: brightness(1.07);
+}
+
+.gf-metal-gold:active:not(:disabled) {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 3px 8px rgba(90, 62, 8, 0.5);
+}
+
+/** The brighter emerald, for a small key that is pressed all evening. */
+.gf-metal-emerald {
+  isolation: isolate;
+  background-image: linear-gradient(
+    152deg,
+    #19b183 0%,
+    #10996f 26%,
+    #0a7d5c 54%,
+    #06624a 80%,
+    #054e3b 100%
+  );
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -2px 5px rgba(2, 44, 34, 0.5),
+    0 2px 8px rgba(6, 78, 59, 0.3);
+}
+
+.gf-metal-emerald::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    168deg,
+    rgba(255, 255, 255, 0.46) 0%,
+    rgba(255, 255, 255, 0.2) 28%,
+    rgba(255, 255, 255, 0.04) 46%,
+    rgba(255, 255, 255, 0) 56%
+  );
+}
+
+.gf-metal-emerald:active {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 3px 8px rgba(2, 44, 34, 0.55);
+}
+
+/* ── The surfaces that are polished ───────────────────────────────────── */
+
+/**
+ * The pay button: the most polished thing on the screen.
+ *
+ * Three strokes of metal, plus the brand's own dark-gold foot. Pressed, the
+ * highlight weakens and the shadow tucks in — the surface reads as being
+ * pushed into the glass rather than merely moving down a pixel.
+ */
+.pos-cta {
+  isolation: isolate;
+  overflow: hidden;
+  /* The polished emerald, with the brand's dark gold at the foot. */
+  background-image: linear-gradient(
+    152deg,
+    #12916b 0%,
+    #0b7355 22%,
+    #075c45 44%,
+    #064e3b 66%,
+    #2f2a14 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 0 0 1px var(--gold-hair),
+    inset 0 -3px 8px rgba(2, 44, 34, 0.62),
+    0 10px 26px rgba(2, 44, 34, 0.34);
+}
+
+.pos-cta::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    170deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0.17) 26%,
+    rgba(255, 255, 255, 0.04) 44%,
+    rgba(255, 255, 255, 0) 54%
+  );
+}
+
+.pos-cta:active {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 0 1px var(--gold-hair),
+    inset 0 3px 9px rgba(2, 44, 34, 0.6),
+    0 2px 6px rgba(2, 44, 34, 0.3);
+}
+
+/** The emerald key — the plus on every dish card, forty times a service. */
+.pos-btn-primary {
+  isolation: isolate;
+  overflow: hidden;
+  background-image: linear-gradient(
+    152deg,
+    #19b183 0%,
+    #10996f 26%,
+    #0a7d5c 54%,
+    #06624a 80%,
+    #054e3b 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -2px 5px rgba(2, 44, 34, 0.5),
+    0 2px 8px rgba(6, 78, 59, 0.3);
+}
+
+.pos-btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    168deg,
+    rgba(255, 255, 255, 0.46) 0%,
+    rgba(255, 255, 255, 0.2) 28%,
+    rgba(255, 255, 255, 0.04) 46%,
+    rgba(255, 255, 255, 0) 56%
+  );
+}
+
+.pos-btn-primary:hover {
+  filter: brightness(1.08);
+}
+
+.pos-btn-primary:active {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 3px 8px rgba(2, 44, 34, 0.55);
+}
+
+/**
+ * Where you are on the rail: pressed gold.
+ *
+ * The brand's four-stop gradient already carries the glint. What is added
+ * here is the thickness — a bright top edge and a dark bottom one — so the
+ * pill sits proud of the rail instead of being painted onto it.
+ */
+.pos-rail-item-active {
+  isolation: isolate;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -2px 4px rgba(90, 62, 8, 0.45),
+    0 3px 12px rgba(2, 44, 34, 0.5);
+}
+
+.pos-rail-item-active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    172deg,
+    rgba(255, 255, 255, 0.42) 0%,
+    rgba(255, 255, 255, 0.12) 32%,
+    rgba(255, 255, 255, 0) 52%
+  );
+}
+
+/**
+ * The rail itself, with the light running down its inside edge.
+ *
+ * A vertical specular rather than a horizontal one: the rail is a tall
+ * narrow thing, and light falling across it would read as a seam.
+ */
+/**
+ * NO `position` here, deliberately.
+ *
+ * The rail is `position: fixed` — set as a Tailwind class on the element —
+ * and this file loads after Tailwind's utilities, unlayered, so anything
+ * written here beats them. A `position: relative` was added at this very
+ * spot to give the pseudo-elements something to anchor to, and it quietly
+ * overrode that `fixed`: the sidebar dropped back into the flex row and
+ * took 80px of width, while the content beside it was still being pushed
+ * 80px clear of a sidebar that was no longer overlapping anything.
+ *
+ * The result was a 160px void down the left of the menu that looked like a
+ * spacing mistake and was really a layout one.
+ *
+ * `fixed` already establishes a containing block, so the pseudo-elements
+ * never needed this. Nothing in here may set `position` on a class that an
+ * element also positions through a utility.
+ */
+.pos-rail {
+  isolation: isolate;
+}
+
+/**
+ * Brushed metal, and the light down its inside edge.
+ *
+ * Two things in one layer. The fine diagonal striping is the brush: hair
+ * lines two pixels apart at two per cent white, which at arm's length is
+ * not a pattern at all — it is the difference between a painted panel and
+ * a milled one. An earlier attempt put a geometric motif here at six per
+ * cent and it read as dirt on the screen, because a MOTIF is something the
+ * eye tries to resolve and a TEXTURE is something it only feels.
+ *
+ * Over it, the specular: vertical rather than horizontal, because the rail
+ * is a tall narrow thing and light falling across it would read as a seam.
+ */
+.pos-rail::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(
+      114deg,
+      rgba(255, 255, 255, 0.022) 0px,
+      rgba(255, 255, 255, 0.022) 1px,
+      rgba(0, 0, 0, 0.025) 1px,
+      rgba(0, 0, 0, 0.025) 3px
+    ),
+    linear-gradient(
+      100deg,
+      rgba(255, 255, 255, 0.13) 0%,
+      rgba(255, 255, 255, 0.05) 20%,
+      rgba(255, 255, 255, 0.01) 38%,
+      rgba(255, 255, 255, 0) 52%
+    );
+}
+
+/**
+ * And a soft pool of light where the falcon sits.
+ *
+ * A screen this dark needs somewhere for the eye to land at the top. It is
+ * a single wide radial at five per cent — enough that the mark looks lit
+ * rather than stuck on, and not enough to notice as a shape.
+ */
+.pos-rail::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 190px;
+  pointer-events: none;
+  background-image: radial-gradient(
+    120% 70% at 50% 0%,
+    rgba(245, 215, 110, 0.1) 0%,
+    rgba(245, 215, 110, 0.03) 42%,
+    rgba(245, 215, 110, 0) 72%
+  );
+}
+
+@media (pointer: coarse) and (max-width: 899px) {
+  /* Lying across the bottom of a phone, the light comes from above again. */
+  .pos-rail::after {
+    background-image: linear-gradient(
+      178deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0) 55%
+    );
+  }
+}
+
+/** A dark panel — a claimed table, the header over an order. */
+.pos-panel-dark {
+  isolation: isolate;
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(2, 44, 34, 0.6),
+    var(--lift-2);
+}
+
+.pos-panel-dark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    176deg,
+    rgba(255, 255, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0.04) 34%,
+    rgba(255, 255, 255, 0) 52%
+  );
+}
+
+/**
+ * A white key, with just enough light to look pressed rather than drawn.
+ *
+ * Far quieter than the coloured surfaces: on white, a specular at the
+ * strength used above would be invisible, and anything strong enough to see
+ * would turn the key grey. So it is a hairline of white at the top and a
+ * whisper of the brand green at the foot.
+ */
+.pos-key {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 2px rgba(6, 78, 59, 0.06),
+    var(--lift-1);
+}
+
+.pos-key:hover:not(:disabled) {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 2px rgba(6, 78, 59, 0.08),
+    var(--lift-2);
+}
+
+.pos-key:active:not(:disabled) {
+  box-shadow: inset 0 2px 5px rgba(6, 78, 59, 0.14);
+}
+
+/**
+ * The card being added to, edged in real foil.
+ *
+ * The gradient border means the edge is dark gold where the card is in
+ * shadow and pale where the light falls on it, which is what a gilded edge
+ * does. A flat gold border is a yellow line, and reads as a highlighter.
+ */
+.pos-card-selected,
+.pos-card.pos-card-selected:hover {
+  border: 1px solid transparent;
+  background-image: linear-gradient(
+      180deg,
+      rgba(212, 175, 55, 0.09),
+      rgba(255, 255, 255, 1) 58%
+    ),
+    var(--gf-gradient-gold);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.2), var(--lift-2);
+}
+
+/**
+ * A bar of frosted glass, for a header that scrolls under content.
+ *
+ * Falls back to a solid ivory wherever backdrop-filter is unavailable, so
+ * nothing ever ends up as unreadable type over a moving menu.
+ */
+.pos-glass {
+  background-color: rgba(237, 243, 238, 0.86);
+  border-bottom: 1px solid var(--border-default);
+}
+
+@supports (backdrop-filter: blur(12px)) {
+  .pos-glass {
+    background-color: rgba(237, 243, 238, 0.74);
+    backdrop-filter: blur(14px) saturate(1.5);
+  }
+}
+
+/**
+ * A field, set into the page.
+ *
+ * The opposite of a key: a soft shadow falling INWARDS from the top edge,
+ * so the surface reads as a groove cut into the ivory rather than a card
+ * lying on it. Keys come up, fields go down — once a screen is consistent
+ * about that, a cashier knows what a thing does before reading its label.
+ */
+.pos-inset {
+  background-color: #fff;
+  border: 1px solid var(--border-default);
+  box-shadow:
+    inset 0 2px 4px rgba(6, 78, 59, 0.07),
+    inset 0 1px 0 rgba(6, 78, 59, 0.05);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pos-inset:focus,
+.pos-inset:focus-within {
+  border-color: var(--theme-primary);
+  box-shadow:
+    inset 0 2px 4px rgba(6, 78, 59, 0.06),
+    0 0 0 3px rgba(6, 78, 59, 0.1);
+  outline: none;
+}
+
+/* ── The floor plan ───────────────────────────────────────────────────── */
+
+/**
+ * A table waiting for the bill: polished amber.
+ *
+ * Warm rather than gold, so it is not mistaken at a glance for a table that
+ * simply has an order running. The two states sit side by side on the floor
+ * plan all evening and a cashier has to tell them apart without reading.
+ */
+.gf-metal-amber {
+  isolation: isolate;
+  background-image: linear-gradient(
+    152deg,
+    #f0b93c 0%,
+    #dca521 28%,
+    #c08c12 60%,
+    #9a6f0d 100%
+  );
+  color: #2d2306;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -2px 5px rgba(90, 62, 8, 0.4),
+    0 3px 10px rgba(154, 111, 13, 0.3);
+}
+
+/** A table another device is already taking an order at. */
+.gf-metal-slate {
+  isolation: isolate;
+  background-image: linear-gradient(
+    152deg,
+    #5e7d72 0%,
+    #4a6b60 30%,
+    #3a564d 64%,
+    #2c423b 100%
+  );
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -2px 5px rgba(2, 44, 34, 0.45),
+    0 3px 10px rgba(2, 44, 34, 0.22);
+}
+
+.gf-metal-amber::after,
+.gf-metal-slate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: linear-gradient(
+    170deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0.16) 28%,
+    rgba(255, 255, 255, 0.03) 46%,
+    rgba(255, 255, 255, 0) 55%
+  );
+}
+
+/**
+ * A table nobody is sitting at.
+ *
+ * Cut into the page rather than raised off it. Vacant tables are most of
+ * the floor for most of a service, and if they were polished too there
+ * would be nothing left for the eye to find.
+ */
+.pos-inset-quiet {
+  background-color: rgba(6, 78, 59, 0.035);
+  border: 1px solid rgba(6, 78, 59, 0.09);
+  box-shadow: inset 0 2px 4px rgba(6, 78, 59, 0.05);
+}
+
+/**
+ * A dark plate for the lockup to sit on.
+ *
+ * The wordmark is gold the whole way through, and gold on white is the
+ * weakest pairing this palette has: on a white card it reads as washed out,
+ * which is the one thing gold must never do. On the brand's own emerald,
+ * lit from the top and edged in a gold hairline, it does what it was drawn
+ * for.
+ */
+.gf-brand-plate {
+  isolation: isolate;
+  border-radius: var(--r-lg);
+  background-image: linear-gradient(152deg, #064e3b 0%, #04392b 55%, #022c22 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 0 0 1px var(--gold-hair),
+    0 8px 24px rgba(2, 44, 34, 0.28);
+}
+
+.gf-brand-plate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image:
+    radial-gradient(
+      120% 80% at 50% 0%,
+      rgba(245, 215, 110, 0.12) 0%,
+      rgba(245, 215, 110, 0) 70%
+    ),
+    linear-gradient(
+      172deg,
+      rgba(255, 255, 255, 0.14) 0%,
+      rgba(255, 255, 255, 0.04) 32%,
+      rgba(255, 255, 255, 0) 52%
+    );
+}
+
+/**
+ * WHERE THE GLOSS GETS ITS POSITIONING CONTEXT
+ *
+ * Every class above paints its shine with an `::after` that is
+ * `position: absolute; inset: 0`, so each one needs a positioned parent.
+ * That `position: relative` used to sit in the rules themselves, written
+ * plainly, outside any cascade layer — and unlayered CSS beats layered CSS
+ * no matter what the specificity says. Tailwind keeps its utilities in
+ * `@layer utilities`, so `relative` written here quietly overruled a
+ * `fixed` written on the element.
+ *
+ * It cost the till a real bug. The sidebar's expand button is
+ * `gf-metal-gold fixed ... w-9`, and `.gf-metal-gold` turned it relative:
+ * it dropped back into the shell's flex row, took its 36px, and shoved the
+ * whole page 36px right. What the eye saw was a gap between the rail and
+ * the categories that nothing in the layout could explain — because the
+ * space was not in the layout at all.
+ *
+ * The same mistake had already been made once, on `.pos-rail`, and the
+ * note left there said never to set `position` on a class an element also
+ * positions through a utility. These rules broke that note.
+ *
+ * So the declaration moves into `@layer components`, which the stylesheet
+ * orders before `utilities`. An element with no position utility still
+ * gets its `relative` and its shine; an element that says `fixed`,
+ * `absolute` or `sticky` now wins, which is what it always meant to do.
+ *
+ * Anything added here later must stay inside this layer.
+ */
+@layer components {
+  .gloss,
+  .sheen,
+  .gf-metal-green,
+  .gf-metal-gold,
+  .gf-metal-emerald,
+  .gf-metal-amber,
+  .gf-metal-slate,
+  .gf-brand-plate,
+  .pos-cta,
+  .pos-btn-primary,
+  .pos-rail-item-active,
+  .pos-panel-dark {
+    position: relative;
+  }
+}
