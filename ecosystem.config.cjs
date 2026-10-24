@@ -3,7 +3,7 @@ const cwd = __dirname;
 module.exports = {
   apps: [
     {
-      name: "surtiswaad-manager-build",
+      name: "greenFalk-Manager-build",
       script: "npm",
       args: "run build",
       cwd,
@@ -21,9 +21,9 @@ module.exports = {
     },
 
     {
-      name: "surtiswaad-manager",
+      name: "greenFalk-Manager",
       script: "npx",
-      args: "vite preview --port 3000 --host",
+      args: "vite preview --port 7002 --host",
       cwd,
       exec_mode: "fork",
       instances: 1,
